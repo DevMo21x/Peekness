@@ -1,22 +1,4 @@
-const DEFAULTS = {
-  enabled: true,
-  onPinnedTabs: true,
-  everyLink: false,
-  modifier: "shift",
-  peekNewTabLinks: true,
-  prefetch: true,
-  allowlist: [],
-  blocklist: [],
-  holdToPeek: true,
-  holdDelay: 450,
-  reducedEffects: false,
-  dismissOnSwipe: true,
-  swipeOpposite: "promote",
-  swipeDirection: "right",
-  naturalScrolling: true,
-  swipeSensitivity: 1,
-  splitMode: "sidePanel",
-};
+const DEFAULTS = globalThis.__PEEK__.DEFAULTS; // src/shared/defaults.js
 
 const fields = [...document.querySelectorAll("[data-key]")];
 const statusEl = document.getElementById("status");
@@ -80,11 +62,8 @@ function paintReadout(key, value) {
 async function load() {
   const { settings } = await chrome.storage.sync.get("settings");
   const s = { ...DEFAULTS, ...(settings || {}) };
-  // Two rounds of history to carry, both so that a gesture nobody wants
-  // doesn't reappear and so the select is never left showing a value it has
-  // no option for. Mirrors swipeOppositeAction() in peek-host.js.
-  if (settings && settings.swipeOpposite == null && settings.splitOnSwipe === false)
-    s.swipeOpposite = "off";
+  // A stored "split" from before has no option left, so the select would show
+  // nothing. Mirrors swipeOppositeAction() in peek-host.js.
   if (s.swipeOpposite !== "off") s.swipeOpposite = "promote";
   for (const el of fields) toUI(el, s[el.dataset.key]);
   for (const key of Object.keys(READOUTS)) paintReadout(key, s[key]);

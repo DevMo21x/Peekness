@@ -28,6 +28,7 @@
       "js": [
         "src/content/peek-styles.js",
         "src/content/peek-icons.js",
+        "src/shared/defaults.js",
         "src/content/peek-host.js"
       ]
     },
@@ -49,7 +50,11 @@
 
   "web_accessible_resources": [
     {
-      "resources": ["src/rail/split-button.html", "src/rail/split-button.js"],
+      "resources": [
+        "src/rail/split-button.html",
+        "src/rail/split-button.js",
+        "src/content/peek-icons.js"
+      ],
       "matches": ["<all_urls>"]
     }
   ],

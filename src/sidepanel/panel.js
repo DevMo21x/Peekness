@@ -54,7 +54,6 @@ if (!url || !/^https?:\/\//i.test(url)) {
   // Keep the worker aware of this panel for as long as it is open.
   try {
     const port = chrome.runtime.connect({ name: "peek-sidepanel" });
-    port.postMessage({ type: "alive", url });
     // Which window this panel is in — the one fact the worker cannot work out
     // for itself, since a side panel has no tab and so the port's sender
     // carries no window either. It matters because opening the panel needs a

@@ -24,10 +24,7 @@ const btn = document.createElement("button");
 btn.type = "button";
 btn.title = "Split with This Tab";
 btn.setAttribute("aria-label", "Split with This Tab");
-btn.innerHTML =
-  '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" ' +
-  'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-  '<rect x="2.2" y="3.2" width="11.6" height="9.6" rx="2.1"/><path d="M8 3.2v9.6"/></svg>';
+btn.innerHTML = globalThis.__PEEK__.ICONS.split;
 document.body.append(btn);
 
 const toParent = (kind, extra) => {

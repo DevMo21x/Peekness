@@ -21,25 +21,7 @@
 
   /* ─── Settings ──────────────────────────────────────────────────────── */
 
-  const DEFAULTS = {
-    enabled: true,
-    onPinnedTabs: true, // Arc's canonical trigger
-    everyLink: false, // a plain click peeks on every tab, pinned or not
-    modifier: "shift", // 'shift' | 'alt' | 'none' — peek any link
-    peekNewTabLinks: true, // target=_blank / window.open from eligible tabs
-    prefetch: true, // warm the document on pointerdown
-    allowlist: [], // extra hosts treated like a pinned tab
-    blocklist: [], // hosts that never peek automatically, from either end
-    holdToPeek: true, // press and hold a link to peek it
-    holdDelay: 450, // ms of stillness before a press counts as a hold
-    reducedEffects: false, // drop backdrop blur on weak GPUs
-    dismissOnSwipe: true,
-    swipeOpposite: "promote", // 'promote' | 'off' — the gesture reversed
-    swipeDirection: "right", // 'right' | 'left' — which way you swipe, and go
-    naturalScrolling: true, // does a rightward swipe report a negative deltaX?
-    swipeSensitivity: 1, // 0.5 deliberate … 2 twitchy
-    splitMode: "sidePanel", // 'sidePanel' | 'window'
-  };
+  const DEFAULTS = NS.DEFAULTS; // src/shared/defaults.js
 
   let settings = { ...DEFAULTS };
   let ctxPinned = false;
@@ -320,13 +302,9 @@
    * worse than one that does the same thing every time. The split button and
    * ⌥⇧S still split, and they always could.
    */
-  const swipeOppositeAction = () => {
-    // "split" is migrated rather than dropped: the swipe already landed as a
-    // tab whenever the panel wasn't open, so promote is where it was going.
-    if (settings.swipeOpposite == null)
-      return settings.splitOnSwipe === false ? "off" : "promote";
-    return settings.swipeOpposite === "off" ? "off" : "promote";
-  };
+  // A stored "split" from before reads as promote: the swipe already landed
+  // as a tab whenever the panel wasn't open, so promote is where it was going.
+  const swipeOppositeAction = () => (settings.swipeOpposite === "off" ? "off" : "promote");
 
   const dismissSign = () => (settings.swipeDirection === "left" ? -1 : 1);
   const naturalSign = () => (settings.naturalScrolling === false ? 1 : -1);

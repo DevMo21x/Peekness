@@ -7,25 +7,9 @@
  *   3. own the actions that need browser APIs (promote, split, context menu).
  */
 
-const DEFAULTS = {
-  enabled: true,
-  onPinnedTabs: true,
-  everyLink: false,
-  modifier: "shift",
-  peekNewTabLinks: true,
-  prefetch: true,
-  allowlist: [],
-  blocklist: [],
-  holdToPeek: true,
-  holdDelay: 450,
-  reducedEffects: false,
-  dismissOnSwipe: true,
-  swipeOpposite: "promote",
-  swipeDirection: "right",
-  naturalScrolling: true,
-  swipeSensitivity: 1,
-  splitMode: "sidePanel", // 'sidePanel' | 'window'
-};
+import "../shared/defaults.js";
+
+const DEFAULTS = globalThis.__PEEK__.DEFAULTS;
 
 /* ─── Settings ────────────────────────────────────────────────────────── */
 
@@ -61,6 +45,25 @@ chrome.runtime.onInstalled.addListener(async () => {
 
 const armed = new Set();
 
+const STRIP_FRAMING = {
+  type: "modifyHeaders",
+  responseHeaders: [
+    { header: "x-frame-options", operation: "remove" },
+    { header: "content-security-policy", operation: "remove" },
+    { header: "content-security-policy-report-only", operation: "remove" },
+  ],
+};
+
+/** A new tab right after `tab`, opened by it. */
+const openBeside = (tab, url, active = true) =>
+  chrome.tabs.create({
+    url,
+    index: tab.index + 1,
+    active,
+    windowId: tab.windowId,
+    openerTabId: tab.id,
+  });
+
 // Session rules outlive the worker; a restart means any peek that owned them
 // is long gone.
 chrome.declarativeNetRequest.getSessionRules().then((rules) => {
@@ -80,14 +83,7 @@ async function arm(tabId) {
         {
           id: tabId,
           priority: 1,
-          action: {
-            type: "modifyHeaders",
-            responseHeaders: [
-              { header: "x-frame-options", operation: "remove" },
-              { header: "content-security-policy", operation: "remove" },
-              { header: "content-security-policy-report-only", operation: "remove" },
-            ],
-          },
+          action: STRIP_FRAMING,
           condition: { tabIds: [tabId], resourceTypes: ["sub_frame"] },
         },
       ],
@@ -138,15 +134,7 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
         reply({ ok: false, error: "no tab or url" });
         return true;
       }
-      chrome.tabs
-        .create({
-          url: msg.url,
-          index: tab.index + 1,
-          active: true,
-          windowId: tab.windowId,
-          openerTabId: tab.id,
-        })
-        .then(
+      openBeside(tab, msg.url).then(
           () => reply({ ok: true }),
           (e) => reply({ ok: false, error: String(e?.message || e) })
         );
@@ -155,23 +143,12 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
 
     case "peek:open-tab":
       if (tab && msg.url) {
-        chrome.tabs.create({
-          url: msg.url,
-          index: tab.index + 1,
-          active: !!msg.active,
-          windowId: tab.windowId,
-          openerTabId: tab.id,
-        });
+        openBeside(tab, msg.url, !!msg.active);
       }
       return false;
 
     case "peek:split":
-      if (tab && msg.url) {
-        splitWith(tab, msg.url).then((r) =>
-          reply({ ...r, sidePanelError: lastSidePanelError })
-        );
-        return true;
-      }
+      if (tab && msg.url) splitWith(tab, msg.url);
       return false;
 
     case "peek:current":
@@ -191,14 +168,6 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
       // frame has no tab of its own, so it passes the id it was given.
       if (msg.url) stageSidePanel(msg.tabId ?? tab?.id, msg.url);
       return false;
-
-    case "peek:diagnose":
-      reply({
-        nativeSplit: nativeSplitAvailable(),
-        hasSidePanel: !!chrome.sidePanel,
-        lastSidePanelError,
-      });
-      return true;
   }
 });
 
@@ -224,46 +193,16 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
  * window and simply re-aim it, which setOptions does with no gesture at all —
  * so a failed open() lands the page in the panel the user already has rather
  * than in a tab beside it. That is what livePanels is for.
- *
- * The feature detection below is deliberate: if a future Aside exposes a
- * split API, this starts using it with no other change.
  */
 
 const SIDEPANEL_RULE_ID = 2147483640;
 
-function nativeSplitAvailable() {
-  return (
-    typeof chrome.tabs?.split === "function" ||
-    typeof globalThis.chrome?.splitView?.create === "function"
-  );
-}
-
 async function splitWith(tab, url) {
   const { splitMode } = await getSettings();
 
-  if (nativeSplitAvailable()) {
-    try {
-      const created = await chrome.tabs.create({
-        url,
-        index: tab.index + 1,
-        active: true,
-        windowId: tab.windowId,
-        openerTabId: tab.id,
-      });
-      if (typeof chrome.tabs.split === "function") {
-        await chrome.tabs.split({ tabIds: [tab.id, created.id] });
-      } else {
-        await chrome.splitView.create({ tabIds: [tab.id, created.id] });
-      }
-      return { ok: true, via: "native" };
-    } catch {
-      /* fall through */
-    }
-  }
-
   if (splitMode === "window") {
     await tileWindows(tab, url);
-    return { ok: true, via: "window" };
+    return;
   }
 
   // The panel is already on screen in this window, so there is nothing to
@@ -272,22 +211,14 @@ async function splitWith(tab, url) {
   // which is rare, but re-aiming an open panel beats spawning a tab next to it.
   if (panelLiveIn(tab.windowId)) {
     await stageSidePanel(tab.id, url);
-    return { ok: true, via: "panel" };
+    return;
   }
 
   // Never rearrange the user's windows unless they asked for that mode
   // explicitly; just put the page next to the tab it came from.
-  await chrome.tabs.create({
-    url,
-    index: tab.index + 1,
-    active: true,
-    windowId: tab.windowId,
-    openerTabId: tab.id,
-  });
-  return { ok: true, via: "tab" };
+  await openBeside(tab, url);
 }
 
-let lastSidePanelError = null;
 const staged = new Map(); // tabId → url currently set as the panel's path
 
 /**
@@ -309,9 +240,8 @@ async function stageSidePanel(tabId, url) {
       path: "src/sidepanel/panel.html?u=" + encodeURIComponent(url),
       enabled: true,
     });
-  } catch (e) {
+  } catch {
     staged.delete(tabId);
-    lastSidePanelError = String(e?.message || e);
   }
 }
 
@@ -327,14 +257,7 @@ async function armSidePanel() {
   const base = {
     id: SIDEPANEL_RULE_ID,
     priority: 1,
-    action: {
-      type: "modifyHeaders",
-      responseHeaders: [
-        { header: "x-frame-options", operation: "remove" },
-        { header: "content-security-policy", operation: "remove" },
-        { header: "content-security-policy-report-only", operation: "remove" },
-      ],
-    },
+    action: STRIP_FRAMING,
   };
   const shapes = [
     { ...base, condition: { initiatorDomains: [chrome.runtime.id], resourceTypes: ["sub_frame"] } },
@@ -425,7 +348,7 @@ async function tileWindows(tab, url) {
       focused: true,
     });
   } catch {
-    chrome.tabs.create({ url, index: tab.index + 1, active: true });
+    openBeside(tab, url);
   }
 }
 
@@ -449,9 +372,7 @@ chrome.commands.onCommand.addListener(async (command, cmdTab) => {
     try {
       await chrome.sidePanel.open({ tabId });
       chrome.tabs.sendMessage(tabId, { type: "peek:close" }).catch(() => {});
-    } catch (e) {
-      lastSidePanelError = String(e?.message || e);
-    }
+    } catch {}
     return;
   }
 

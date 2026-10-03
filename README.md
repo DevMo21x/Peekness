@@ -282,6 +282,7 @@ src/content/peek-styles.js      the whole visual layer, as one stylesheet
 src/rail/split-button.*         the split button, in its own extension document
 src/sidepanel/panel.*           the split target
 src/background/service-worker.js  tab context, header rules, promote / split
+src/shared/defaults.js          setting defaults, shared by every context
 ```
 
 Four details carry most of the weight.
