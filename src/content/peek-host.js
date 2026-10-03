@@ -752,6 +752,10 @@
     _blocked() {
       this.fallback.dataset.on = "1";
       this.loader.dataset.on = "0";
+      // A page left over from before Peek was reloaded can't arm the header
+      // rule, so every site that refuses frames lands here. Blaming the site
+      // would send you looking in the wrong place.
+      if (!extensionAlive()) return this._sayStale();
       this._say(
         (this.pendingHost || "This site") + " won’t load in a Peek",
         "It refuses to be embedded, so there’s nothing to preview here. " +
@@ -1112,15 +1116,19 @@
           "promote"
         );
       } else {
-        this._say(
-          "Peek was updated",
-          "This page is still running the old version, so Peek can’t reach the " +
-            "browser from here — which is also why the site wouldn’t load. " +
-            "Reload the page and both will work again.",
-          "Reload This Page",
-          "reload"
-        );
+        this._sayStale();
       }
+    }
+
+    _sayStale() {
+      this._say(
+        "Peek was updated",
+        "This page is still running the old version, so Peek can’t reach the " +
+          "browser from here — which is also why the site wouldn’t load. " +
+          "Reload the page and both will work again.",
+        "Reload This Page",
+        "reload"
+      );
     }
 
     _morphOut() {
