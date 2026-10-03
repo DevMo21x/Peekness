@@ -1,0 +1,124 @@
+name: "Bug Report"
+description: Something in Peek doesn't work the way the README says it should
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this. The [README](https://github.com/DevMo21x/Peekness/blob/main/README.md) is the spec for how Peek should behave, so a quick look there helps you say what you expected.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: What went wrong, and what did you expect to happen instead?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of Peek is affected?
+      options:
+        - A Peek didn't open
+        - A Peek opened when it shouldn't have
+        - The page in the Peek is blank or says "refused to connect"
+        - Animation or swipe gesture
+        - Promote to tab / Split
+        - Keyboard shortcut or context menu
+        - Settings page
+        - Something else
+    validations:
+      required: true
+
+  - type: dropdown
+    id: trigger
+    attributes:
+      label: How did you open (or try to open) the Peek?
+      multiple: true
+      options:
+        - Click on a pinned tab
+        - Click with "every link" turned on
+        - Modifier-click (Shift / Alt)
+        - Press and hold
+        - Link that opens a new tab (target=_blank / window.open)
+        - Allowlisted site
+        - Context menu
+        - Keyboard shortcut (⌥⇧P)
+        - Not related to opening a Peek
+
+  - type: input
+    id: url
+    attributes:
+      label: Page URL and link
+      description: The page you were on and the link you clicked. Leave out anything private.
+      placeholder: "On https://news.ycombinator.com, clicked a link to https://example.com/article"
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Pin a tab with https://...
+        2. Click the link "..."
+        3. ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: How often does it happen?
+      options:
+        - Every time
+        - Sometimes
+        - Happened once
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      description: Copy it from the browser's About page (chrome://version).
+      placeholder: "e.g., Aside 150.0.7800.12, Chrome 150"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Peek version
+      description: Shown on chrome://extensions.
+      placeholder: "e.g., 1.1.0, or the commit hash if you loaded it unpacked"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "e.g., macOS 26.0"
+
+  - type: textarea
+    id: settings
+    attributes:
+      label: Settings you changed
+      description: List any Peek settings that aren't at their default, such as the modifier key, hold delay, swipe direction or split mode.
+      placeholder: "e.g., modifier: alt, holdToPeek: off, splitMode: window"
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console errors
+      description: |
+        Errors from the page's DevTools console, or from the service worker (chrome://extensions → Peek → "service worker"). This will be formatted as code automatically.
+      render: text
+
+  - type: textarea
+    id: media
+    attributes:
+      label: Screenshots or screen recording
+      description: Drag and drop images or video here. A recording helps a lot with animation and gesture bugs.
