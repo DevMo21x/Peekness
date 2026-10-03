@@ -52,6 +52,18 @@
 
         <label class="row">
           <div class="txt">
+            <span class="t">Peek every link with a plain click</span>
+            <span class="d">
+              Treats every tab like a pinned one, so no link navigates the tab
+              away. ⌘-click still opens a new tab, and the blocklist still
+              applies.
+            </span>
+          </div>
+          <input type="checkbox" data-key="everyLink" class="switch" />
+        </label>
+
+        <label class="row">
+          <div class="txt">
             <span class="t">Peek links that would open a new tab</span>
             <span class="d">
               Covers <code>target="_blank"</code> and <code>window.open()</code>.

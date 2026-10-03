@@ -24,6 +24,7 @@
   const DEFAULTS = {
     enabled: true,
     onPinnedTabs: true, // Arc's canonical trigger
+    everyLink: false, // a plain click peeks on every tab, pinned or not
     modifier: "shift", // 'shift' | 'alt' | 'none' — peek any link
     peekNewTabLinks: true, // target=_blank / window.open from eligible tabs
     prefetch: true, // warm the document on pointerdown
@@ -172,7 +173,7 @@
   /** Is this tab one where a plain click should peek? (Arc: pinned tabs.) */
   function tabIsPeekContext() {
     if (pageBlocked()) return false;
-    return (settings.onPinnedTabs && ctxPinned) || hostAllowlisted();
+    return settings.everyLink || (settings.onPinnedTabs && ctxPinned) || hostAllowlisted();
   }
 
   function modifierHeld(e) {

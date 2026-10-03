@@ -72,6 +72,7 @@ The transient case is the default; persistence is the deliberate act.
 | Trigger | Default |
 |---|---|
 | Click a link in a **pinned tab** | on |
+| Click **any link**, in any tab | off |
 | **Shift-click** any link, anywhere | on |
 | **Press and hold** a link for ~0.45s | on |
 | `target="_blank"` or `window.open()` from a pinned tab | on |
@@ -110,7 +111,7 @@ work with a mouse and not with a trackpad: a mouse resting on a desk moves by
 nothing at all, so the drag never started and the hold survived.
 
 The **blocklist** switches off the triggers that fire on their own — a pinned
-tab, the allowlist, a `_blank` link — for the sites on it. It counts from both
+tab, every-link mode, the allowlist, a `_blank` link — for the sites on it. It counts from both
 ends: nothing peeks by itself while you are on a blocked site, and a link *to*
 one is never picked up automatically from anywhere else.
 
@@ -236,6 +237,7 @@ options.
 |---|---|---|
 | `enabled` | on | Master switch. Off means links behave exactly as Chromium ships them. |
 | `onPinnedTabs` | on | Clicks in a pinned tab peek instead of navigating. |
+| `everyLink` | off | A plain click peeks any link in any tab, as if every tab were pinned. ⌘-click still opens a new tab; the blocklist still applies. |
 | `peekNewTabLinks` | on | Route `target="_blank"` and `window.open()` into a Peek. Sized popups — sign-in, payment — are left alone. |
 | `modifier` | `shift` | Modifier that peeks any link on any page. `shift` \| `alt` \| `none`. |
 | `holdToPeek` | on | Press and hold a link to peek it, without the click ever completing. |

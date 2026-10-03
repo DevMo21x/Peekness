@@ -10,6 +10,7 @@
 const DEFAULTS = {
   enabled: true,
   onPinnedTabs: true,
+  everyLink: false,
   modifier: "shift",
   peekNewTabLinks: true,
   prefetch: true,
